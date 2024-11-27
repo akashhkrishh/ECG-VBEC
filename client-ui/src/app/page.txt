@@ -1,0 +1,137 @@
+"use client";
+import { uploadFile } from "@/redux/slices/dataSlice";
+import { RootState } from "@/redux/store";
+import { useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+
+export default function Home() {
+  const [images, setImages] = useState<string[]>([]);
+  const [file, setFile] = useState<File | null>(null);
+  const [uploading, setUploading] = useState<boolean>(false);
+  const [message, setMessage] = useState<string | null>(null);
+ 
+  const dispatch = useDispatch();
+  const { result, gray_image,predict, ecg_1dsignal, ecg_final, lead, prepossed_lead, contour_lead } = useSelector((state: RootState) => state.data);
+
+  // Fetch the list of processed images from the Flask backend
+  useEffect(() => {
+    let isMounted = true;
+
+    const fetchImages = async () => {
+      try {
+        const response = await fetch("http://localhost:5000/");
+        if (!response.ok) {
+          throw new Error(`Error: ${response.status}`);
+        }
+        const data = await response.json();
+        if (isMounted) setImages(data.images); // Assuming `data.images` contains the array of image filenames
+      } catch (error) {
+        if (isMounted) setMessage("Failed to fetch images.");
+        console.error("Error fetching images:", error);
+      }
+    };
+
+    fetchImages();
+
+    // Cleanup function to avoid memory leaks
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      setFile(e.target.files[0]);
+    }
+  };
+
+  const handleUpload = async () => {
+    if (!file) return;
+    dispatch(uploadFile(file));
+
+    // setUploading(true);
+    // setMessage(null);
+
+    // const formData = new FormData();
+    // formData.append("file", file);
+
+    // try {
+    //   const response = await fetch("http://localhost:5000/upload", {
+    //     method: "POST",
+    //     body: formData,
+    //   });
+
+    //   if (!response.ok) {
+    //     throw new Error(`Upload failed: ${response.status}`);
+    //   }
+
+    //   const result = await response.json();
+    //   setMessage("Upload successful!");
+    //   console.log(result);
+    //   setImages([result.image_files[0]]
+    //   );
+ 
+    // } catch (error) {
+    //   console.error("Upload error:", error);
+    //   setMessage("Error uploading image.");
+    // } finally {
+    //   setUploading(false);
+    // }
+  };
+
+  const renderImages = () => {
+    return images.map((image, index) => (
+      <div key={index}>
+        <img
+          src={`http://localhost:5000/processed_image/${image}`}
+          alt={`Processed Image ${index}`}
+          style={{ width: "200px", height: "auto", margin: "10px" }}
+        />
+      </div>
+    ));
+  };
+
+  return (
+    <div>
+      <h1>Upload and Process Images</h1>
+
+      {/* File upload form */}
+      <input type="file" onChange={handleFileChange} />
+      <button onClick={handleUpload} disabled={uploading}>
+        {uploading ? "Uploading..." : "Upload Image"}
+      </button>
+
+      {message && <p>{message}</p>}
+
+      <div>
+        <h2>Processed Images</h2>
+        {renderImages()}
+      </div>
+      {result}
+      <img
+          src={`http://localhost:5000/processed_image/${gray_image}`}
+          alt={`Processed Image `}
+          style={{ width: "200px", height: "auto", margin: "10px" }}
+        />
+      <img
+          src={`http://localhost:5000/processed_image/${lead}`}
+          alt={`Processed Image `}
+          style={{ width: "200px", height: "auto", margin: "10px" }}
+        />
+      <img
+          src={`http://localhost:5000/processed_image/${prepossed_lead}`}
+          alt={`Processed Image `}
+          style={{ width: "200px", height: "auto", margin: "10px" }}
+        />
+      <img
+          src={`http://localhost:5000/processed_image/${contour_lead}`}
+          alt={`Processed Image `}
+          style={{ width: "200px", height: "auto", margin: "10px" }}
+        />
+        {JSON.stringify(ecg_1dsignal)} 
+        {JSON.stringify(ecg_final)} 
+        {JSON.stringify(predict)} 
+    </div>
+
+  );
+}
