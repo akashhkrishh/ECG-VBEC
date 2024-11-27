@@ -1,0 +1,16 @@
+scikit-image==0.24.0
+matplotlib==3.8.0
+matplotlib-inline==0.1.7
+matplotlib-venn==1.1.1
+scikit-learn==1.5.2
+joblib==1.4.2
+geopandas==1.0.1
+pandas==2.2.2
+pandas-datareader==0.10.0
+pandas-gbq==0.24.0
+pandas-stubs==2.2.2.240909
+sklearn-pandas==2.2.0
+numpy==1.26.4
+natsort==8.4.0
+Flask==2.3.2
+flask_cors==3.0.2
